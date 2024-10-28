@@ -5,10 +5,13 @@ package com.zh.config;
 
 import com.zh.annotation.EnableXxlJob;
 import com.zh.annotation.XxlJobTask;
-import com.zh.service.XxlJobService;
+import com.zh.service.JobService;
+
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.reflections.Reflections;
+import org.reflections.scanners.MethodAnnotationsScanner;
+import org.reflections.util.ConfigurationBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -25,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 public class XXLJobTaskRegistrar {
 
     @Autowired
-    private XxlJobService xxlJobService;
+    private JobService jobService;
 
     @Autowired
     private RedissonClient redissonClient;
@@ -54,7 +57,9 @@ public class XXLJobTaskRegistrar {
         System.out.println("扫描的包路径: " + basePackage);
 
         // 使用 Reflections 扫描指定包路径下的任务
-        Reflections reflections = new Reflections(basePackage);
+        Reflections reflections = new Reflections(new ConfigurationBuilder()
+                .forPackages(basePackage)
+                .addScanners(new MethodAnnotationsScanner())); // 添加 MethodAnnotationsScanner
         Set<Method> jobMethods = reflections.getMethodsAnnotatedWith(XxlJobTask.class);
 
         for (Method method : jobMethods) {
@@ -67,7 +72,7 @@ public class XXLJobTaskRegistrar {
             try {
                 if (lock.tryLock(10, TimeUnit.SECONDS)) {
                     // 检查任务是否已存在
-                    if (xxlJobService.checkJobExists(jobDesc, executorHandler)) {
+                    if (jobService.checkJobExists(jobDesc, executorHandler)) {
                         System.out.println("任务 [" + jobDesc + "] 已存在，跳过添加");
                         continue;
                     }
@@ -88,7 +93,7 @@ public class XXLJobTaskRegistrar {
                     jobConfig.put("executorFailRetryCount", xxlJobTask.executorFailRetryCount());
 
                     // 添加任务到 XXL-JOB 管理中心
-                    boolean success = xxlJobService.addJob(jobConfig);
+                    boolean success = jobService.addJob(jobConfig);
                     if (success) {
                         System.out.println("任务 [" + jobDesc + "] 成功添加到 XXL-JOB 管理中心");
                     } else {

@@ -5,9 +5,6 @@ package com.zh.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-/**
- * @author mumu
- */
 @Component
 @ConfigurationProperties(prefix = "xxl.job")
 public class XxlJobProperties {

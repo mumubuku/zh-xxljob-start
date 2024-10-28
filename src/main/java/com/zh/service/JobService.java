@@ -6,7 +6,7 @@ import java.util.Map;
 /**
  * @author mumu
  */
-public interface XxlJobService {
+public interface JobService {
 
     boolean addJob(Map<String, Object> jobConfig);
 

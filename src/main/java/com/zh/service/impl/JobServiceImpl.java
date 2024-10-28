@@ -2,9 +2,8 @@ package com.zh.service.impl;
 
 
 import com.zh.config.XxlJobProperties;
-import com.zh.service.XxlJobService;
+import com.zh.service.JobService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -15,8 +14,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * @author mumu
+ */
 @Service
-public class XxlJobServiceImpl implements XxlJobService {
+public class JobServiceImpl implements JobService {
 
     @Autowired
     private XxlJobProperties xxlJobProperties;
