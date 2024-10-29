@@ -41,11 +41,13 @@ public class XXLJobTaskRegistrar {
     @PostConstruct
     public void registerJobs() {
         // 获取主启动类，检查其是否带有 @EnableXxlJob 注解
-        Class<?> mainApplicationClass = applicationContext.getBeansWithAnnotation(EnableXxlJob.class)
-                .values()
-                .iterator()
-                .next()
-                .getClass();
+        Map<String, Object> beans = applicationContext.getBeansWithAnnotation(EnableXxlJob.class);
+        if (beans.isEmpty()) {
+            throw new IllegalStateException("未找到使用 @EnableXxlJob 注解的类");
+        }
+
+        Class<?> mainApplicationClass = beans.values().iterator().next().getClass();
+
         EnableXxlJob enableXxlJob = AnnotationUtils.findAnnotation(mainApplicationClass, EnableXxlJob.class);
 
         if (enableXxlJob == null) {
