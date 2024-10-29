@@ -48,10 +48,8 @@ public class JobServiceImpl implements JobService {
             List<String> cookies = response.getHeaders().get(HttpHeaders.SET_COOKIE);
             if (cookies != null) {
                 for (String cookie : cookies) {
-                    if (cookie.contains("JSESSIONID")) {
                         sessionCookie = cookie;
                         break;
-                    }
                 }
             }
             System.out.println("登录成功，获取到 Session Cookie: " + sessionCookie);
@@ -96,18 +94,28 @@ public class JobServiceImpl implements JobService {
     @Override
     public boolean addJob(Map<String, Object> jobConfig) {
         String url = xxlJobProperties.getAdminAddresses() + "/jobinfo/add";
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(jobConfig, createHeaders());
+
+        // 将 jobConfig 转换为 MultiValueMap 以便以表单方式提交
+        MultiValueMap<String, String> formParams = new LinkedMultiValueMap<>();
+        formParams.add("jobGroup", String.valueOf(16));  // 设置 jobGroup 的值
+        jobConfig.forEach((key, value) -> formParams.add(key, String.valueOf(value))); // 将其他参数添加到表单
+
+        HttpHeaders headers = createHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED); // 设置 Content-Type 为表单格式
+
+        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(formParams, headers);
         ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
 
         // 如果使用 session 模式且 session 过期则重新登录
-        if (response.getStatusCode() == HttpStatus.UNAUTHORIZED && "session".equalsIgnoreCase(xxlJobProperties.getAuthMode())) {
+        if (response.getStatusCode() != HttpStatus.OK && "session".equalsIgnoreCase(xxlJobProperties.getAuthMode())) {
             login();
-            entity = new HttpEntity<>(jobConfig, createHeadersWithSessionCookie());
+            entity = new HttpEntity<>(formParams, createHeadersWithSessionCookie());
             response = restTemplate.postForEntity(url, entity, String.class);
         }
 
         return response.getStatusCode().is2xxSuccessful();
     }
+
 
 
     @Override
@@ -198,20 +206,64 @@ public class JobServiceImpl implements JobService {
     @Override
     public Map<String, Object> getJobList(int start, int length) {
         String url = xxlJobProperties.getAdminAddresses() + "/jobinfo/pageList";
-        Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("start", start);
-        requestBody.put("length", length);
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, createHeaders());
+
+        // 将参数封装为表单格式
+        MultiValueMap<String, String> formParams = new LinkedMultiValueMap<>();
+        formParams.add("start", String.valueOf(start));
+        formParams.add("length", String.valueOf(length));
+        formParams.add("jobGroup", String.valueOf(getJobGroupIdByAppname(xxlJobProperties.getAppname())));
+        formParams.add("triggerStatus", String.valueOf("1"));
+
+        HttpHeaders headers = createHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);  // 设置 Content-Type 为表单格式
+
+        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(formParams, headers);
         ResponseEntity<Map> response = restTemplate.postForEntity(url, entity, Map.class);
 
+        // 如果认证失败并且使用 session 认证模式，则重新登录
         if (response.getStatusCode() == HttpStatus.UNAUTHORIZED && "session".equalsIgnoreCase(xxlJobProperties.getAuthMode())) {
             login();
-            entity = new HttpEntity<>(requestBody, createHeadersWithSessionCookie());
-            response = restTemplate.postForEntity(url, entity, Map.class);
+            HttpEntity<MultiValueMap<String, String>> sessionEntity = new HttpEntity<>(formParams, createHeadersWithSessionCookie());
+            response = restTemplate.postForEntity(url, sessionEntity, Map.class);
         }
 
         return response.getBody();
     }
+
+
+
+
+    public Integer getJobGroupIdByAppname(String appname) {
+        String url = xxlJobProperties.getAdminAddresses() + "/jobgroup/pageList";
+
+        // 构建请求头
+        HttpEntity<String> entity = new HttpEntity<>(createHeaders());
+
+        // 发起请求，获取执行器组列表
+        ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
+
+        // 如果需要使用 session 认证，检测是否有未授权的响应并进行二次登录
+        if (response.getStatusCode() == HttpStatus.UNAUTHORIZED && "session".equalsIgnoreCase(xxlJobProperties.getAuthMode())) {
+            login();
+            entity = new HttpEntity<>(createHeadersWithSessionCookie());
+            response = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
+        }
+
+        // 处理响应数据
+        if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+            List<Map<String, Object>> jobGroups = (List<Map<String, Object>>) response.getBody().get("data");
+
+            // 遍历 jobGroups 查找匹配的 appname
+            for (Map<String, Object> group : jobGroups) {
+                if (appname.equals(group.get("appname"))) {
+                    return (Integer) group.get("id"); // 返回找到的 jobGroupId
+                }
+            }
+        }
+
+        throw new IllegalStateException("未找到匹配的 jobGroup，appname=" + appname);
+    }
+
 
     @Override
     public boolean checkJobExists(String jobDesc, String executorHandler) {

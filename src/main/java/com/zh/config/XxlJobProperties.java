@@ -13,7 +13,8 @@ public class XxlJobProperties {
     private String accessToken;
     private String username;
     private String password;
-    private String authMode = "token"; // 新增 authMode，默认使用 token 方式
+    private String appname;  // 新增 appname 配置项
+    private String authMode = "session"; // 新增 authMode，默认使用 token 方式
 
     // Getters and Setters
     public String getBasePackage() {
@@ -62,5 +63,15 @@ public class XxlJobProperties {
 
     public void setAuthMode(String authMode) {
         this.authMode = authMode;
+    }
+
+
+    // Getters and Setters
+    public String getAppname() {
+        return appname;
+    }
+
+    public void setAppname(String appname) {
+        this.appname = appname;
     }
 }

@@ -86,6 +86,7 @@ public class XXLJobTaskRegistrar {
                     jobConfig.put("executorHandler", executorHandler);
                     jobConfig.put("scheduleType", "CRON");
                     jobConfig.put("scheduleConf", xxlJobTask.cron());
+                    jobConfig.put("glueType", "BEAN");
                     jobConfig.put("executorRouteStrategy", xxlJobTask.executorRouteStrategy());
                     jobConfig.put("misfireStrategy", xxlJobTask.misfireStrategy());
                     jobConfig.put("executorBlockStrategy", xxlJobTask.executorBlockStrategy());

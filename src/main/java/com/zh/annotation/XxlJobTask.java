@@ -15,7 +15,11 @@ public @interface XxlJobTask {
     String author() default "admin";          // 任务负责人
     String alarmEmail() default "";           // 报警邮件
 
+    String scheduleType() default  "CRON";
     String cron() default "0 0 * * * ?";      // Cron 表达式，默认为每小时执行一次
+
+
+    String glueType() default "BEAN";
 
     String executorHandler();                 // 任务处理器名称，必须指定
 
