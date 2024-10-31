@@ -1,0 +1,8 @@
+xxl:
+  job:
+    adminAddresses: http://36.139.142.158:8081/xxl-job-admin
+    user-name: admin
+    password: BJyp@1909
+    appname: gp-order
+    access-token: default_token
+    port: 9201

@@ -18,10 +18,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 @SpringBootTest(properties = {
-        "xxl.job.admin-addresses=http://localhost:8080/xxl-job-admin",
-        "xxl.job.appname=xxl-job-starter-test",
+        "xxl.job.admin-addresses=http://36.139.142.158:8081/xxl-job-admin",
+        "xxl.job.appname=gp-order",
         "xxl.job.accessToken=your-access-token",
-        "xxl.job.authMode=token"
+        "xxl.job.username=admin",
+        "xxl.job.password=BJyp@1909",
+
 })
 @ActiveProfiles("test")  // 使用测试环境配置
 public class XxlJobStarterTest {
