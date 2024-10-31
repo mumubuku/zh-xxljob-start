@@ -1,4 +1,3 @@
-以下是为您封装的 `xxl-job` starter 的 `README.md`，该文档详细描述了如何配置、使用以及测试该 starter。
 
 ---
 
