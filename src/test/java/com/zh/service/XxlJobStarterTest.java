@@ -87,6 +87,38 @@ public class XxlJobStarterTest {
 
 
     @Test
+    public void testRemoveJob() {
+        boolean result =  xxlJobService.removeJob(6975);
+
+        assertTrue(result, "Job should be updated successfully");
+    }
+
+
+    @Test
+    public void testStartJob() {
+        boolean result =  xxlJobService.startJob(6974);
+
+        assertTrue(result, "Job should be updated successfully");
+    }
+
+
+    @Test
+    public void testStopJob() {
+        boolean result =  xxlJobService.stopJob(6974);
+
+        assertTrue(result, "Job should be updated successfully");
+    }
+
+
+    @Test
+    public void tiggerJob() {
+        boolean result =  xxlJobService.triggerJob(6974,"test111");
+
+        assertTrue(result, "Job should be updated successfully");
+    }
+
+
+    @Test
     public void testGetJobList() {
         // 获取任务列表，假设从服务端获取
         Map<String, Object> jobList = xxlJobService.getJobList(0, 10);
