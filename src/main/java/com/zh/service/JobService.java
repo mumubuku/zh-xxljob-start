@@ -1,16 +1,18 @@
 package com.zh.service;
 
-import java.util.Map;
+import com.zh.model.JobConfig;  // 引入 JobConfig 类
 
+import java.util.Map;
 
 /**
  * @author mumu
  */
 public interface JobService {
 
-    boolean addJob(Map<String, Object> jobConfig);
+    boolean addJob(JobConfig jobConfig);
 
-    boolean updateJob(Map<String, Object> jobConfig);
+
+    boolean updateJob(int jobId , JobConfig jobConfig);
 
     boolean removeJob(int jobId);
 

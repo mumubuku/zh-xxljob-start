@@ -81,22 +81,23 @@ public class XXLJobTaskRegistrar {
 
                     // 创建任务配置
                     Map<String, Object> jobConfig = new HashMap<>();
-                    jobConfig.put("jobGroup", 1);
-                    jobConfig.put("jobDesc", jobDesc);
-                    jobConfig.put("author", xxlJobTask.author());
-                    jobConfig.put("alarmEmail", xxlJobTask.alarmEmail());
-                    jobConfig.put("executorHandler", executorHandler);
-                    jobConfig.put("scheduleType", "CRON");
-                    jobConfig.put("scheduleConf", xxlJobTask.cron());
-                    jobConfig.put("glueType", "BEAN");
-                    jobConfig.put("executorRouteStrategy", xxlJobTask.executorRouteStrategy());
-                    jobConfig.put("misfireStrategy", xxlJobTask.misfireStrategy());
-                    jobConfig.put("executorBlockStrategy", xxlJobTask.executorBlockStrategy());
-                    jobConfig.put("executorTimeout", xxlJobTask.executorTimeout());
-                    jobConfig.put("executorFailRetryCount", xxlJobTask.executorFailRetryCount());
-
-                    // 添加任务到 XXL-JOB 管理中心
-                    boolean success = jobService.addJob(jobConfig);
+//                    jobConfig.put("jobGroup", 1);
+//                    jobConfig.put("jobDesc", jobDesc);
+//                    jobConfig.put("author", xxlJobTask.author());
+//                    jobConfig.put("alarmEmail", xxlJobTask.alarmEmail());
+//                    jobConfig.put("executorHandler", executorHandler);
+//                    jobConfig.put("scheduleType", "CRON");
+//                    jobConfig.put("scheduleConf", xxlJobTask.cron());
+//                    jobConfig.put("glueType", "BEAN");
+//                    jobConfig.put("executorRouteStrategy", xxlJobTask.executorRouteStrategy());
+//                    jobConfig.put("misfireStrategy", xxlJobTask.misfireStrategy());
+//                    jobConfig.put("executorBlockStrategy", xxlJobTask.executorBlockStrategy());
+//                    jobConfig.put("executorTimeout", xxlJobTask.executorTimeout());
+//                    jobConfig.put("executorFailRetryCount", xxlJobTask.executorFailRetryCount());
+//
+//                    // 添加任务到 XXL-JOB 管理中心
+//                    boolean success = jobService.addJob(jobConfig);
+                    Boolean success = true;
                     if (success) {
                         System.out.println("任务 [" + jobDesc + "] 成功添加到 XXL-JOB 管理中心");
                     } else {

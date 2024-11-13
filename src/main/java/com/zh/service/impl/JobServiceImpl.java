@@ -1,7 +1,10 @@
 package com.zh.service.impl;
 
-
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zh.config.XxlJobProperties;
+import com.zh.model.JobConfig;
 import com.zh.service.JobService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -48,8 +51,8 @@ public class JobServiceImpl implements JobService {
             List<String> cookies = response.getHeaders().get(HttpHeaders.SET_COOKIE);
             if (cookies != null) {
                 for (String cookie : cookies) {
-                        sessionCookie = cookie;
-                        break;
+                    sessionCookie = cookie;
+                    break;
                 }
             }
             System.out.println("登录成功，获取到 Session Cookie: " + sessionCookie);
@@ -92,47 +95,138 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
-    public boolean addJob(Map<String, Object> jobConfig) {
+    public boolean addJob(JobConfig jobConfig) {
         String url = xxlJobProperties.getAdminAddresses() + "/jobinfo/add";
 
-        // 将 jobConfig 转换为 MultiValueMap 以便以表单方式提交
+        // 将 JobConfig 转换为 MultiValueMap 以便以表单方式提交
         MultiValueMap<String, String> formParams = new LinkedMultiValueMap<>();
-        formParams.add("jobGroup", String.valueOf(16));  // 设置 jobGroup 的值
-        jobConfig.forEach((key, value) -> formParams.add(key, String.valueOf(value))); // 将其他参数添加到表单
+        formParams.add("jobGroup", String.valueOf(jobConfig.getJobGroup()));  // 使用 JobConfig 中的 jobGroup
 
+        // 检查并添加 JobConfig 中的其他参数
+        if (jobConfig.getJobDesc() != null) formParams.add("jobDesc", jobConfig.getJobDesc());
+        if (jobConfig.getExecutorHandler() != null) formParams.add("executorHandler", jobConfig.getExecutorHandler());
+        if (jobConfig.getScheduleType() != null) formParams.add("scheduleType", jobConfig.getScheduleType().getValue());
+        if (jobConfig.getScheduleConf() != null) formParams.add("scheduleConf", jobConfig.getScheduleConf());
+        if (jobConfig.getExecutorRouteStrategy() != null) formParams.add("executorRouteStrategy", jobConfig.getExecutorRouteStrategy().getValue());
+        if (jobConfig.getExecutorBlockStrategy() != null) formParams.add("executorBlockStrategy", jobConfig.getExecutorBlockStrategy().getValue());
+        if (jobConfig.getGlueType() != null) formParams.add("glueType", jobConfig.getGlueType().getValue());
+        if (jobConfig.getAuthor() != null) formParams.add("author", jobConfig.getAuthor());
+        if (jobConfig.getMisfireStrategy() != null) formParams.add("misfireStrategy", jobConfig.getMisfireStrategy().getValue());
+        formParams.add("executorTimeout", String.valueOf(jobConfig.getExecutorTimeout()));
+        formParams.add("executorFailRetryCount", String.valueOf(jobConfig.getExecutorFailRetryCount()));
+
+        // 设置请求头
         HttpHeaders headers = createHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED); // 设置 Content-Type 为表单格式
 
+        // 构建 HTTP 实体对象
         HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(formParams, headers);
+
+        // 发送 POST 请求
         ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
 
-        // 如果使用 session 模式且 session 过期则重新登录
+        // 如果响应状态不是 OK 且使用 session 模式，则重新登录
         if (response.getStatusCode() != HttpStatus.OK && "session".equalsIgnoreCase(xxlJobProperties.getAuthMode())) {
             login();
             entity = new HttpEntity<>(formParams, createHeadersWithSessionCookie());
             response = restTemplate.postForEntity(url, entity, String.class);
         }
 
-        return response.getStatusCode().is2xxSuccessful();
+        // 解析返回的 JSON 响应
+        try {
+            if (response.getStatusCode().is2xxSuccessful()) {
+                String responseBody = response.getBody();
+                ObjectMapper objectMapper = new ObjectMapper();
+                JsonNode jsonResponse = objectMapper.readTree(responseBody);
+
+                int code = jsonResponse.path("code").asInt();
+                String msg = jsonResponse.path("msg").asText();
+
+                // 如果 code 不是 200，则返回失败
+                if (code != 200) {
+                    System.out.println("Error: " + msg);
+                    return false;
+                }
+            } else {
+                System.out.println("Request failed with status: " + response.getStatusCode());
+                return false;
+            }
+        } catch (JsonProcessingException e) {
+            System.out.println("Error parsing response: " + e.getMessage());
+            return false;
+        }
+
+        return true; // 成功返回 true
     }
+
 
 
 
     @Override
-    public boolean updateJob(Map<String, Object> jobConfig) {
+    public boolean updateJob(int jobId,JobConfig jobConfig) {
         String url = xxlJobProperties.getAdminAddresses() + "/jobinfo/update";
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(jobConfig, createHeaders());
+
+        // 将 JobConfig 转换为 MultiValueMap 以便以表单方式提交
+        MultiValueMap<String, String> formParams = new LinkedMultiValueMap<>();
+        formParams.add("id", String.valueOf(jobId));  // 添加 jobId
+        formParams.add("jobGroup", String.valueOf(jobConfig.getJobGroup()));  // 使用 JobConfig 中的 jobGroup
+        formParams.add("jobDesc", jobConfig.getJobDesc()); // 任务描述
+        formParams.add("executorHandler", jobConfig.getExecutorHandler()); // 执行器处理器
+        formParams.add("scheduleType", jobConfig.getScheduleType().getValue()); // 调度类型
+        formParams.add("scheduleConf", jobConfig.getScheduleConf()); // 调度配置
+        formParams.add("executorRouteStrategy", jobConfig.getExecutorRouteStrategy().getValue()); // 执行器路由策略
+        formParams.add("executorBlockStrategy", jobConfig.getExecutorBlockStrategy().getValue()); // 执行器阻塞策略
+        formParams.add("glueType", jobConfig.getGlueType().getValue()); // Glue 类型
+        formParams.add("author", jobConfig.getAuthor()); // 作者
+        formParams.add("misfireStrategy", jobConfig.getMisfireStrategy().getValue()); // 任务过期策略
+        formParams.add("executorTimeout", String.valueOf(jobConfig.getExecutorTimeout())); // 执行超时时间
+        formParams.add("executorFailRetryCount", String.valueOf(jobConfig.getExecutorFailRetryCount())); // 重试次数
+        formParams.add("failStrategy", jobConfig.getFailStrategy().getValue()); // 任务失败策略
+
+        // 设置请求头
+        HttpHeaders headers = createHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED); // 设置 Content-Type 为表单格式
+
+        // 构建 HTTP 实体对象
+        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(formParams, headers);
+
+        // 发送 POST 请求
         ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
 
-        // 如果使用 session 模式且 session 过期则重新登录
-        if (response.getStatusCode() == HttpStatus.UNAUTHORIZED && "session".equalsIgnoreCase(xxlJobProperties.getAuthMode())) {
+        // 如果响应状态不是 OK 且使用 session 模式，则重新登录
+        if (response.getStatusCode() != HttpStatus.OK && "session".equalsIgnoreCase(xxlJobProperties.getAuthMode())) {
             login();
-            entity = new HttpEntity<>(jobConfig, createHeadersWithSessionCookie());
+            entity = new HttpEntity<>(formParams, createHeadersWithSessionCookie());
             response = restTemplate.postForEntity(url, entity, String.class);
         }
 
-        return response.getStatusCode().is2xxSuccessful();
+        // 解析返回的 JSON 响应
+        try {
+            if (response.getStatusCode().is2xxSuccessful()) {
+                String responseBody = response.getBody();
+                ObjectMapper objectMapper = new ObjectMapper();
+                JsonNode jsonResponse = objectMapper.readTree(responseBody);
+
+                int code = jsonResponse.path("code").asInt();
+                String msg = jsonResponse.path("msg").asText();
+
+                // 如果 code 不是 200，则返回失败
+                if (code != 200) {
+                    System.out.println("Error: " + msg);
+                    return false;
+                }
+            } else {
+                System.out.println("Request failed with status: " + response.getStatusCode());
+                return false;
+            }
+        } catch (JsonProcessingException e) {
+            System.out.println("Error parsing response: " + e.getMessage());
+            return false;
+        }
+
+        return true; // 成功返回 true
     }
+
 
     @Override
     public boolean removeJob(int jobId) {
