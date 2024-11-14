@@ -5,6 +5,9 @@ package com.zh.config;
 
 import com.zh.annotation.EnableXxlJob;
 import com.zh.annotation.XxlJobTask;
+import com.zh.model.GlueType;
+import com.zh.model.JobConfig;
+import com.zh.model.ScheduleType;
 import com.zh.service.JobService;
 
 import org.redisson.api.RLock;
@@ -79,25 +82,28 @@ public class XXLJobTaskRegistrar {
                         continue;
                     }
 
-                    // 创建任务配置
-                    Map<String, Object> jobConfig = new HashMap<>();
-//                    jobConfig.put("jobGroup", 1);
-//                    jobConfig.put("jobDesc", jobDesc);
-//                    jobConfig.put("author", xxlJobTask.author());
-//                    jobConfig.put("alarmEmail", xxlJobTask.alarmEmail());
-//                    jobConfig.put("executorHandler", executorHandler);
-//                    jobConfig.put("scheduleType", "CRON");
-//                    jobConfig.put("scheduleConf", xxlJobTask.cron());
-//                    jobConfig.put("glueType", "BEAN");
-//                    jobConfig.put("executorRouteStrategy", xxlJobTask.executorRouteStrategy());
-//                    jobConfig.put("misfireStrategy", xxlJobTask.misfireStrategy());
-//                    jobConfig.put("executorBlockStrategy", xxlJobTask.executorBlockStrategy());
-//                    jobConfig.put("executorTimeout", xxlJobTask.executorTimeout());
-//                    jobConfig.put("executorFailRetryCount", xxlJobTask.executorFailRetryCount());
-//
-//                    // 添加任务到 XXL-JOB 管理中心
-//                    boolean success = jobService.addJob(jobConfig);
-                    Boolean success = true;
+                    // 创建 JobConfig 对象并设置属性
+                    JobConfig jobConfig = new JobConfig();
+                    jobConfig.setJobGroup(1); // 设置执行器组ID
+                    jobConfig.setJobDesc(jobDesc); // 设置作业描述
+                    jobConfig.setExecutorHandler(executorHandler); // 设置执行器Handler
+                    jobConfig.setAuthor(xxlJobTask.author()); // 设置作业作者
+                    jobConfig.setScheduleType(ScheduleType.CRON); // 设置调度类型（使用枚举）
+                    jobConfig.setScheduleConf(xxlJobTask.cron()); // 设置调度配置（CRON表达式）
+                    jobConfig.setGlueType(GlueType.BEAN); // 设置代码类型（使用枚举）
+                  //  jobConfig.setExecutorRouteStrategy(xxlJobTask.executorRouteStrategy()); // 设置执行路由策略（使用枚举）
+                   // jobConfig.setMisfireStrategy(MisfireStrategy.IGNORE); // 设置错过调度时的策略（使用枚举，示例为忽略）
+                  //  jobConfig.setExecutorBlockStrategy(xxlJobTask.executorBlockStrategy()); // 设置执行阻塞策略（使用枚举）
+                    jobConfig.setExecutorTimeout(xxlJobTask.executorTimeout()); // 设置执行超时时间
+                    jobConfig.setExecutorFailRetryCount(xxlJobTask.executorFailRetryCount()); // 设置失败重试次数
+
+
+                   // jobConfig.setFailStrategy(FailStrategy.RETRY); // 设置失败策略（使用枚举，示例为重试）
+
+
+                    boolean success = jobService.addJob(jobConfig);
+
+
                     if (success) {
                         System.out.println("任务 [" + jobDesc + "] 成功添加到 XXL-JOB 管理中心");
                     } else {
