@@ -32,6 +32,10 @@ public class XXLJobTaskRegistrar {
     @Autowired
     private ApplicationContext applicationContext;
 
+
+    @Autowired
+    private XxlJobProperties xxlJobProperties;
+
     @PostConstruct
     public void registerJobs() {
         // 获取主启动类，检查其是否带有 @EnableXxlJob 注解
@@ -85,7 +89,7 @@ public class XXLJobTaskRegistrar {
 
     private JobConfig buildJobConfig(XxlJobTask xxlJobTask, String jobDesc, String executorHandler) {
         JobConfig jobConfig = new JobConfig();
-        jobConfig.setJobGroup(1); // 设置执行器组ID
+        jobConfig.setJobGroup(jobService.getJobGroupIdByAppname(xxlJobProperties.getAppname())); // 设置执行器组ID
         jobConfig.setJobDesc(jobDesc); // 设置作业描述
         jobConfig.setExecutorHandler(executorHandler); // 设置执行器Handler（使用方法名作为 handler）
         jobConfig.setAuthor(xxlJobTask.author()); // 设置作业作者
