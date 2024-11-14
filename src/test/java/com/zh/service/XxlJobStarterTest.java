@@ -121,7 +121,7 @@ public class XxlJobStarterTest {
     @Test
     public void testGetJobList() {
         // 获取任务列表，假设从服务端获取
-        Map<String, Object> jobList = xxlJobService.getJobList(0, 10);
+        Map<String, Object> jobList = xxlJobService.getJobList(TriggerStatus.TRIGGERED);
 
         // 断言返回值不为 null
         assertNotNull(jobList, "Job list should not be null");
@@ -139,6 +139,14 @@ public class XxlJobStarterTest {
         assertTrue(result, "Job should be triggered successfully");
     }
 
-    // 进一步添加更多的测试方法，验证其他 API 功能
+
+    @Test
+    public void testGetappId() {
+        int jobId = 1;  // 需要替换为有效的任务 ID
+        int result = xxlJobService.getJobGroupIdByAppname("gp-order");
+
+        // 断言任务触发结果为 true
+        assertTrue(result == 16, "Job should be triggered successfully");
+    }
 
 }
