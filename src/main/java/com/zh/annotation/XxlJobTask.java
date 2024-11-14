@@ -1,6 +1,10 @@
 package com.zh.annotation;
 
-
+import com.zh.model.ExecutorBlockStrategy;
+import com.zh.model.ExecutorRouteStrategy;
+import com.zh.model.MisfireStrategy;
+import com.zh.model.ScheduleType;
+import com.zh.model.GlueType;
 
 import java.lang.annotation.*;
 
@@ -15,17 +19,16 @@ public @interface XxlJobTask {
     String author() default "admin";          // 任务负责人
     String alarmEmail() default "";           // 报警邮件
 
-    String scheduleType() default  "CRON";
+    ScheduleType scheduleType() default ScheduleType.CRON; // 调度类型，默认为 CRON
     String cron() default "0 0 * * * ?";      // Cron 表达式，默认为每小时执行一次
 
-
-    String glueType() default "BEAN";
+    GlueType glueType() default GlueType.BEAN; // 代码类型，默认为 BEAN
 
     String executorHandler();                 // 任务处理器名称，必须指定
 
-    String executorRouteStrategy() default "FIRST";     // 路由策略
-    String misfireStrategy() default "DO_NOTHING";      // 任务调度策略
-    String executorBlockStrategy() default "SERIAL_EXECUTION"; // 阻塞策略
+    ExecutorRouteStrategy executorRouteStrategy() default ExecutorRouteStrategy.FIRST;     // 路由策略
+    MisfireStrategy misfireStrategy() default MisfireStrategy.DO_NOTHING;      // 任务调度策略
+    ExecutorBlockStrategy executorBlockStrategy() default ExecutorBlockStrategy.SERIAL_EXECUTION; // 阻塞策略
 
     int executorTimeout() default 0;                 // 任务超时时间，0 表示无限制
     int executorFailRetryCount() default 0;          // 失败重试次数
