@@ -24,7 +24,7 @@ public @interface XxlJobTask {
 
     GlueType glueType() default GlueType.BEAN; // 代码类型，默认为 BEAN
 
-    String executorHandler();                 // 任务处理器名称，必须指定
+    String executorHandler()    default "";             // 任务处理器名称，必须指定
 
     ExecutorRouteStrategy executorRouteStrategy() default ExecutorRouteStrategy.FIRST;     // 路由策略
     MisfireStrategy misfireStrategy() default MisfireStrategy.DO_NOTHING;      // 任务调度策略

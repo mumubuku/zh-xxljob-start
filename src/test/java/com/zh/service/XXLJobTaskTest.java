@@ -1,5 +1,6 @@
 package com.zh.service;
 
+import com.xxl.job.core.handler.annotation.XxlJob;
 import com.zh.annotation.XxlJobTask;
 import org.springframework.stereotype.Component;
 
@@ -16,8 +17,10 @@ import org.springframework.stereotype.Component;
 public class XXLJobTaskTest {
 
 
-    @XxlJobTask(jobDesc = "测试输出", executorHandler = "1111")
+    @XxlJobTask(jobDesc = "测试任务运行")
+    @XxlJob("test")
     public void  test() {
+
         System.out.println("测试输出");
     }
 }

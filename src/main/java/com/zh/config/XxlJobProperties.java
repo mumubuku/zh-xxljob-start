@@ -2,11 +2,13 @@ package com.zh.config;
 
 
 
+import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @Component
 @ConfigurationProperties(prefix = "xxl.job")
+@Data
 public class XxlJobProperties {
     private String basePackage;
     private String adminAddresses;
@@ -16,62 +18,16 @@ public class XxlJobProperties {
     private String appname;  // 新增 appname 配置项
     private String authMode = "session"; // 新增 authMode，默认使用 token 方式
 
-    // Getters and Setters
-    public String getBasePackage() {
-        return basePackage;
-    }
 
-    public void setBasePackage(String basePackage) {
-        this.basePackage = basePackage;
-    }
+    private String address;
 
-    public String getAdminAddresses() {
-        return adminAddresses;
-    }
+    private String ip;
 
-    public void setAdminAddresses(String adminAddresses) {
-        this.adminAddresses = adminAddresses;
-    }
+    private Integer port;
 
-    public String getAccessToken() {
-        return accessToken;
-    }
-
-    public void setAccessToken(String accessToken) {
-        this.accessToken = accessToken;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getAuthMode() {
-        return authMode;
-    }
-
-    public void setAuthMode(String authMode) {
-        this.authMode = authMode;
-    }
+    private String logPath;
+    private Integer logRetentionDays = 30;
 
 
-    // Getters and Setters
-    public String getAppname() {
-        return appname;
-    }
 
-    public void setAppname(String appname) {
-        this.appname = appname;
-    }
 }
