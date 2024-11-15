@@ -52,10 +52,10 @@ public class XxlJobStarterTest {
 
         System.out.println(jobConfig);
         // 调用 addJob 方法，假设成功返回 true
-        boolean result = xxlJobService.addJob(jobConfig);
+        Integer result = xxlJobService.addJob(jobConfig);
 
         // 断言返回值为 true，表示任务添加成功
-        assertTrue(result, "Job should be added successfully");
+        assertTrue(result > 0, "Job should be added successfully");
     }
 
 

@@ -10,7 +10,7 @@ import java.util.Map;
  */
 public interface JobService {
 
-    boolean addJob(JobConfig jobConfig);
+    Integer addJob(JobConfig jobConfig);
 
 
     boolean updateJob(int jobId , JobConfig jobConfig);

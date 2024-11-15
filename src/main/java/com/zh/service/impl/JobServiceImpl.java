@@ -27,96 +27,51 @@ public class JobServiceImpl implements JobService {
     private String sessionCookie;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-
-    /**
-     * @Description: 新增定时任务方法
-     * @Author: tianyunzhao
-     * @Date: 2024/11/14 10:14
-     * @param jobConfig:
-     * @return boolean
-     **/
+    // 新增任务
     @Override
-    public boolean addJob(JobConfig jobConfig) {
+    public Integer addJob(JobConfig jobConfig) {
         return executeJobAction("/jobinfo/add", buildJobFormParams(jobConfig));
     }
 
-
-    /**
-     * @Description: 更新定时任务方法
-     * @Author: tianyunzhao
-     * @Date: 2024/11/14 10:14
-     * @param jobConfig:
-     * @return boolean
-     **/
+    // 更新任务
     @Override
     public boolean updateJob(int jobId, JobConfig jobConfig) {
         MultiValueMap<String, String> formParams = buildJobFormParams(jobConfig);
         formParams.add("id", String.valueOf(jobId));
-        return executeJobAction("/jobinfo/update", formParams);
+        return executeJobAction("/jobinfo/update", formParams) != null;
     }
 
-
-    /**
-     * @Description: 移除定时任务方法
-     * @Author: tianyunzhao
-     * @Date: 2024/11/14 10:14
-     * @param jobId
-     * @return boolean
-     **/
+    // 移除任务
     @Override
     public boolean removeJob(int jobId) {
         MultiValueMap<String, String> formParams = new LinkedMultiValueMap<>();
         formParams.add("id", String.valueOf(jobId));
-        return executeJobAction("/jobinfo/remove", formParams);
+        return executeJobAction("/jobinfo/remove", formParams) != null;
     }
 
-    /**
-     * @Description: 开启定时任务方法
-     * @Author: tianyunzhao
-     * @Date: 2024/11/14 10:14
-     * @param jobId
-     * @return boolean
-     **/
+    // 开启任务
     @Override
     public boolean startJob(int jobId) {
         return triggerJobAction(jobId, "/jobinfo/start");
     }
 
-    /**
-     * @Description: 关闭定时任务方法
-     * @Author: tianyunzhao
-     * @Date: 2024/11/14 10:14
-     * @param jobId
-     * @return boolean
-     **/
+    // 停止任务
     @Override
     public boolean stopJob(int jobId) {
         return triggerJobAction(jobId, "/jobinfo/stop");
     }
 
-    /**
-     * @Description: 手动触发定时任务方法
-     * @Author: tianyunzhao
-     * @Date: 2024/11/14 10:14
-     * @param jobId
-     * @return boolean
-     **/
+    // 手动触发任务
     @Override
     public boolean triggerJob(int jobId, String executorParam) {
         String url = xxlJobProperties.getAdminAddresses() + "/jobinfo/trigger";
         MultiValueMap<String, String> formParams = new LinkedMultiValueMap<>();
         formParams.add("id", String.valueOf(jobId));
         formParams.add("executorParam", executorParam);
-        return executeJobAction(url, formParams);
+        return executeJobAction(url, formParams) != null;
     }
 
-    /**
-     * @Description: 获取定时任务列表
-     * @Author: tianyunzhao
-     * @Date: 2024/11/14 10:14
-     * @param
-     * @return boolean
-     **/
+    // 获取任务列表
     @Override
     public Map<String, Object> getJobList(TriggerStatus triggerStatus) {
         String url = xxlJobProperties.getAdminAddresses() + "/jobinfo/pageList";
@@ -132,16 +87,29 @@ public class JobServiceImpl implements JobService {
         return response.getBody();
     }
 
-    /**
-     * @Description: 检查定时任务是否已经存在的接口
-     * @Author: tianyunzhao
-     * @Date: 2024/11/14 10:14
-     * @param
-     * @return boolean
-     **/
+    // 通过 appName 获取 jobGroupId
+    @Override
+    public Integer getJobGroupIdByAppname(String appname) {
+        String url = xxlJobProperties.getAdminAddresses() + "/jobgroup/pageList";
+
+        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(new LinkedMultiValueMap<>(), createHeaders());
+        ResponseEntity<Map> response = restTemplate.postForEntity(url, entity, Map.class);
+
+        List<Map<String, Object>> jobGroups = (List<Map<String, Object>>) response.getBody().get("data");
+
+        for (Map<String, Object> jobGroup : jobGroups) {
+            if (jobGroup.get("appname").equals(appname)) {
+                return (Integer) jobGroup.get("id");
+            }
+        }
+
+        throw new RuntimeException("无法找到与 appname " + appname + " 对应的 jobGroupId");
+    }
+
+
     @Override
     public boolean checkJobExists(String jobDesc, String executorHandler) {
-        Map<String, Object> jobList = getJobList(TriggerStatus.TRIGGERED);  // 假设最多检查前100个任务
+        Map<String, Object> jobList = getJobList(TriggerStatus.TRIGGERED);
         if (jobList == null) return false;
 
         List<Map<String, Object>> jobs = (List<Map<String, Object>>) jobList.get("data");
@@ -155,39 +123,8 @@ public class JobServiceImpl implements JobService {
         return false;
     }
 
-
-    /**
-     * @Description: 通过appName获取group id的方法
-     * @Author: tianyunzhao
-     * @Date: 2024/11/14 10:14
-     * @param
-     * @return boolean
-     **/
-    @Override
-    public Integer getJobGroupIdByAppname(String appname) {
-        String url = xxlJobProperties.getAdminAddresses() + "/jobgroup/pageList";
-
-        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(new LinkedMultiValueMap<>(), createHeaders());
-        ResponseEntity<Map> response = restTemplate.postForEntity(url, entity, Map.class);
-
-        // Assuming the response body contains a key "jobGroups" that holds the list of job groups
-        List<Map<String, Object>> jobGroups = (List<Map<String, Object>>) response.getBody().get("data");
-
-        for (Map<String, Object> jobGroup : jobGroups) {
-            if (jobGroup.get("appname").equals(appname)) {
-                return (Integer) jobGroup.get("id");
-            }
-        }
-
-        throw new RuntimeException("无法找到与 appname " + appname + " 对应的 jobGroupId");
-    }
-
-
-
-
-
-
-    private boolean executeJobAction(String actionUrl, MultiValueMap<String, String> formParams) {
+    // 统一处理任务操作，返回 jobId
+    private Integer executeJobAction(String actionUrl, MultiValueMap<String, String> formParams) {
         String url = xxlJobProperties.getAdminAddresses() + actionUrl;
         HttpHeaders headers = createHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -195,16 +132,18 @@ public class JobServiceImpl implements JobService {
         HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(formParams, headers);
         ResponseEntity<String> response = sendRequest(url, entity);
 
-        return handleResponse(response);
+        return extractJobIdFromResponse(response);
     }
 
+    // 触发任务操作
     private boolean triggerJobAction(int jobId, String actionUrl) {
         MultiValueMap<String, String> formParams = new LinkedMultiValueMap<>();
         formParams.add("id", String.valueOf(jobId));
-        return executeJobAction(actionUrl, formParams);
+        return executeJobAction(actionUrl, formParams) != null;
     }
 
-    private boolean handleResponse(ResponseEntity<String> response) {
+    // 提取响应中的 jobId
+    private Integer extractJobIdFromResponse(ResponseEntity<String> response) {
         try {
             if (response.getStatusCode().is2xxSuccessful()) {
                 JsonNode jsonResponse = objectMapper.readTree(response.getBody());
@@ -212,19 +151,21 @@ public class JobServiceImpl implements JobService {
                 String msg = jsonResponse.path("msg").asText();
                 if (code != 200) {
                     System.out.println("Error: " + msg);
-                    return false;
+                    return null;
                 }
+                // 提取 content 字段中的 jobId
+                return jsonResponse.path("content").asInt();
             } else {
                 System.out.println("Request failed with status: " + response.getStatusCode());
-                return false;
+                return null;
             }
         } catch (JsonProcessingException e) {
             System.out.println("Error parsing response: " + e.getMessage());
-            return false;
+            return null;
         }
-        return true;
     }
 
+    // 发送请求并处理会话过期情况
     private ResponseEntity<String> sendRequest(String url, HttpEntity<?> entity) {
         ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
 
@@ -237,6 +178,50 @@ public class JobServiceImpl implements JobService {
 
         return response;
     }
+
+    // 登录方法获取 sessionCookie
+    private void login() {
+        String url = xxlJobProperties.getAdminAddresses() + "/login";
+        MultiValueMap<String, String> loginParams = new LinkedMultiValueMap<>();
+        loginParams.add("userName", xxlJobProperties.getUsername());
+        loginParams.add("password", xxlJobProperties.getPassword());
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(loginParams, headers);
+        ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
+
+        if (response.getStatusCode().is2xxSuccessful()) {
+            sessionCookie = response.getHeaders().getFirst(HttpHeaders.SET_COOKIE);
+            System.out.println("登录成功，获取到 Session Cookie: " + sessionCookie);
+        } else {
+            throw new RuntimeException("登录失败，无法获取 Session Cookie");
+        }
+    }
+
+    // 创建带 Session Cookie 的 Headers
+    private HttpHeaders createHeadersWithSessionCookie() {
+        if (sessionCookie == null) login();
+        HttpHeaders headers = new HttpHeaders();
+        headers.set(HttpHeaders.COOKIE, sessionCookie);
+        return headers;
+    }
+
+    // 创建带 Access Token 的 Headers
+    private HttpHeaders createHeadersWithAccessToken() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("XXL-JOB-ACCESS-TOKEN", xxlJobProperties.getAccessToken());
+        return headers;
+    }
+
+    // 创建 Headers
+    private HttpHeaders createHeaders() {
+        return "session".equalsIgnoreCase(xxlJobProperties.getAuthMode())
+                ? createHeadersWithSessionCookie()
+                : createHeadersWithAccessToken();
+    }
+
 
     private MultiValueMap<String, String> buildJobFormParams(JobConfig jobConfig) {
         MultiValueMap<String, String> formParams = new LinkedMultiValueMap<>();
@@ -261,45 +246,4 @@ public class JobServiceImpl implements JobService {
             formParams.add(key, value);
         }
     }
-
-    private void login() {
-        String url = xxlJobProperties.getAdminAddresses() + "/login";
-        MultiValueMap<String, String> loginParams = new LinkedMultiValueMap<>();
-        loginParams.add("userName", xxlJobProperties.getUsername());
-        loginParams.add("password", xxlJobProperties.getPassword());
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(loginParams, headers);
-        ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
-
-        if (response.getStatusCode().is2xxSuccessful()) {
-            sessionCookie = response.getHeaders().getFirst(HttpHeaders.SET_COOKIE);
-            System.out.println("登录成功，获取到 Session Cookie: " + sessionCookie);
-        } else {
-            throw new RuntimeException("登录失败，无法获取 Session Cookie");
-        }
-    }
-
-    private HttpHeaders createHeadersWithSessionCookie() {
-        if (sessionCookie == null) login();
-        HttpHeaders headers = new HttpHeaders();
-        headers.set(HttpHeaders.COOKIE, sessionCookie);
-        return headers;
-    }
-
-    private HttpHeaders createHeadersWithAccessToken() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("XXL-JOB-ACCESS-TOKEN", xxlJobProperties.getAccessToken());
-        return headers;
-    }
-
-    private HttpHeaders createHeaders() {
-        return "session".equalsIgnoreCase(xxlJobProperties.getAuthMode())
-                ? createHeadersWithSessionCookie()
-                : createHeadersWithAccessToken();
-    }
-
-
 }

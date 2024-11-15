@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 public class XXLJobTaskTest {
 
 
-    @XxlJobTask(jobDesc = "测试任务运行")
+    @XxlJobTask(jobDesc = "测试任务运行2")
     @XxlJob("test")
     public void  test() {
 

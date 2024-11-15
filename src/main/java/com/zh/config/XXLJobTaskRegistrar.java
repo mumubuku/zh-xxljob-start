@@ -69,9 +69,9 @@ public class XXLJobTaskRegistrar {
 
                     // 创建 JobConfig 对象并设置属性
                     JobConfig jobConfig = buildJobConfig(xxlJobTask, jobDesc, executorHandler);
-                    boolean success = jobService.addJob(jobConfig);
-
-                    if (success) {
+                    Integer id = jobService.addJob(jobConfig);
+                    Boolean isSuccess = jobService.startJob(id);
+                    if (isSuccess) {
                         System.out.println("任务 [" + jobDesc + "] 成功添加到 XXL-JOB 管理中心");
                     } else {
                         System.out.println("任务 [" + jobDesc + "] 添加失败");
