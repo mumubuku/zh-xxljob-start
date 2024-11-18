@@ -3,19 +3,25 @@ package com.zh.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.xxl.job.core.context.XxlJobHelper;
 import com.zh.config.XxlJobProperties;
 import com.zh.model.JobConfig;
+import com.zh.model.ScheduleType;
 import com.zh.model.TriggerStatus;
 import com.zh.service.JobService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class JobServiceImpl implements JobService {
@@ -31,6 +37,41 @@ public class JobServiceImpl implements JobService {
     @Override
     public Integer addJob(JobConfig jobConfig) {
         return executeJobAction("/jobinfo/add", buildJobFormParams(jobConfig));
+    }
+
+
+    // Method to add a single execution job
+    public Integer addSingleExecutionJob(Date triggerTime, String executorParam, String executorHandler) {
+        int customId = Math.abs(UUID.randomUUID().hashCode()); // Generate unique task ID as int
+        XxlJobHelper.log("Adding single execution job, task ID: " + customId);
+        Boolean isExist = this.checkJobExists(String.valueOf(customId));
+        Assert.isTrue(isExist, "Task with custom ID " + customId + " already exists, please modify");
+        Date now = new Date();
+        boolean after = triggerTime.after(now);
+        Assert.isTrue(after, "The execution time must be greater than the current time");
+
+        JobConfig jobConfig = new JobConfig();
+        jobConfig.setJobDesc("Single execution job");
+        jobConfig.setAuthor(String.valueOf(customId));
+        jobConfig.setScheduleType(ScheduleType.CRON);
+        String cron = getCron(triggerTime);
+        jobConfig.setScheduleConf(cron);
+        jobConfig.setExecutorHandler(executorHandler);
+        jobConfig.setExecutorParam(executorParam);
+
+        Integer jobId = addJob(jobConfig);
+        XxlJobHelper.log("Successfully added single execution job, task ID: " + jobId);
+        return jobId;
+    }
+
+    public static String getCron(Date date) {
+        SimpleDateFormat sdf = new SimpleDateFormat("ss mm HH dd MM ? yyyy");
+        String formatTimeStr = "";
+        if (date != null) {
+            formatTimeStr = sdf.format(date);
+        }
+
+        return formatTimeStr;
     }
 
     // 更新任务
@@ -106,6 +147,22 @@ public class JobServiceImpl implements JobService {
         throw new RuntimeException("无法找到与 appname " + appname + " 对应的 jobGroupId");
     }
 
+
+    @Override
+    public boolean checkJobExists(String id) {
+        Map<String, Object> jobList = getJobList(TriggerStatus.TRIGGERED);
+        if (jobList == null) return false;
+
+        List<Map<String, Object>> jobs = (List<Map<String, Object>>) jobList.get("data");
+        for (Map<String, Object> job : jobs) {
+            String resultId = (String) job.get("id");
+
+            if (id.equals(resultId) ) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     @Override
     public boolean checkJobExists(String jobDesc, String executorHandler) {

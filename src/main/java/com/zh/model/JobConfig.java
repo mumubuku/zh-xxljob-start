@@ -22,7 +22,7 @@ public class JobConfig implements Serializable {
     private List<Integer> childJobIds; // 子任务ID列表（如果有）
     private MisfireStrategy misfireStrategy; // 错过调度时的策略，使用枚举
     private FailStrategy failStrategy; // 失败后的处理策略，使用枚举
-
+    private String  executorParam;  //执行参数
 
 
     @Override

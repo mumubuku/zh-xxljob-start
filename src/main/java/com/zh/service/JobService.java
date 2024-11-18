@@ -25,6 +25,8 @@ public interface JobService {
 
     Map<String, Object> getJobList(TriggerStatus triggerStatus);
 
+    boolean checkJobExists(String id);
+
     boolean checkJobExists(String jobDesc, String executorHandler);  // 检查任务是否存在
 
     Integer getJobGroupIdByAppname(String appname);
