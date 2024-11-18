@@ -15,7 +15,7 @@
         <!-- 使用 spring-boot-dependencies 以避免可执行 JAR 的打包行为 -->
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-dependencies</artifactId>
-        <version>2.5.4</version>
+        <version>3.1.3</version>
         <relativePath/>
     </parent>
 

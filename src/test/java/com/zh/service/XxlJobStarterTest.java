@@ -133,7 +133,7 @@ public class XxlJobStarterTest {
     @Test
     public void testJobTrigger() {
         int jobId = 1;  // 需要替换为有效的任务 ID
-        boolean result = xxlJobService.triggerJob(jobId, "");
+        boolean result = xxlJobService.triggerJob(jobId, "11");
 
         // 断言任务触发结果为 true
         assertTrue(result, "Job should be triggered successfully");

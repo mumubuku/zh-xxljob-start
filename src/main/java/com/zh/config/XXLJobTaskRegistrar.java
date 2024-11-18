@@ -4,6 +4,7 @@ import com.zh.annotation.EnableXxlJob;
 import com.zh.annotation.XxlJobTask;
 import com.zh.model.*;
 import com.zh.service.JobService;
+import jakarta.annotation.PostConstruct;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.reflections.Reflections;
@@ -13,7 +14,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
+
 import java.lang.reflect.Method;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;

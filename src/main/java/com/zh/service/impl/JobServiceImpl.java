@@ -64,7 +64,7 @@ public class JobServiceImpl implements JobService {
     // 手动触发任务
     @Override
     public boolean triggerJob(int jobId, String executorParam) {
-        String url = xxlJobProperties.getAdminAddresses() + "/jobinfo/trigger";
+        String url =   "/jobinfo/trigger";
         MultiValueMap<String, String> formParams = new LinkedMultiValueMap<>();
         formParams.add("id", String.valueOf(jobId));
         formParams.add("executorParam", executorParam);
@@ -145,7 +145,7 @@ public class JobServiceImpl implements JobService {
     // 提取响应中的 jobId
     private Integer extractJobIdFromResponse(ResponseEntity<String> response) {
         try {
-            if (response.getStatusCode().is2xxSuccessful()) {
+            if (response.getStatusCodeValue() >= 200 && response.getStatusCodeValue() < 300) {
                 JsonNode jsonResponse = objectMapper.readTree(response.getBody());
                 int code = jsonResponse.path("code").asInt();
                 String msg = jsonResponse.path("msg").asText();
