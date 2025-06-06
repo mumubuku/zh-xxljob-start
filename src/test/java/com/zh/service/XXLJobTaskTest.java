@@ -17,10 +17,10 @@ import org.springframework.stereotype.Component;
 public class XXLJobTaskTest {
 
 
-    @XxlJobTask(jobDesc = "测试任务运行2")
+    @XxlJobTask(jobDesc = "11112345678",cron = "*/1 * * * * ?")
     @XxlJob("test")
     public void  test() {
 
-        System.out.println("测试输出");
+        System.out.println("测试输出是否正常");
     }
 }

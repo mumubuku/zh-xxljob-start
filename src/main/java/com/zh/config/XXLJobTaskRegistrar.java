@@ -56,7 +56,19 @@ public class XXLJobTaskRegistrar {
         for (Method method : jobMethods) {
             XxlJobTask xxlJobTask = method.getAnnotation(XxlJobTask.class);
             String jobDesc = xxlJobTask.jobDesc();
-            String executorHandler = method.getName(); // 动态获取方法名作为任务的 executorHandler
+            String executorHandler = xxlJobTask.executorHandler();
+
+            if (jobDesc == null || jobDesc.trim().isEmpty()) {
+                throw new IllegalArgumentException("@XxlJobTask on " + method + " 必须指定 jobDesc");
+            }
+
+            if (xxlJobTask.cron() == null || xxlJobTask.cron().trim().isEmpty()) {
+                throw new IllegalArgumentException("@XxlJobTask on " + method + " 必须指定 cron 表达式");
+            }
+            if (executorHandler == null || executorHandler.isEmpty()) {
+                executorHandler = method.getName();
+            }
+
 
             // 获取分布式锁，防止多个节点同时添加相同任务
             RLock lock = redissonClient.getLock(JOB_REGISTRATION_LOCK);
@@ -92,7 +104,7 @@ public class XXLJobTaskRegistrar {
         JobConfig jobConfig = new JobConfig();
         jobConfig.setJobGroup(jobService.getJobGroupIdByAppname(xxlJobProperties.getAppname())); // 设置执行器组ID
         jobConfig.setJobDesc(jobDesc); // 设置作业描述
-        jobConfig.setExecutorHandler(executorHandler); // 设置执行器Handler（使用方法名作为 handler）
+        jobConfig.setExecutorHandler(executorHandler); // 设置执行器Handler
         jobConfig.setAuthor(xxlJobTask.author()); // 设置作业作者
         jobConfig.setScheduleType(xxlJobTask.scheduleType()); // 设置调度类型
         jobConfig.setScheduleConf(xxlJobTask.cron()); // 设置调度配置（CRON表达式）
