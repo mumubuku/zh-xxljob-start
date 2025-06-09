@@ -32,7 +32,7 @@
     <dependency>
         <groupId>com.zh</groupId>
         <artifactId>xxl-job-starter</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.0-SNAPSHOT</version>
     </dependency>
     ```
 
@@ -71,9 +71,6 @@
 使用 `@XxlJobTask` 注解来定义任务：
 
 ```java
-import com.zh.annotation.XxlJobTask;
-import com.xxl.job.core.biz.model.ReturnT;
-
 @Component
 public class SampleJob {
 
@@ -110,69 +107,13 @@ public class SampleJob {
 | `executorTimeout`      | 任务执行超时时间（秒）         | 0（不限时）     |
 | `executorFailRetryCount`| 失败重试次数                  | 0               |
 
-## 任务执行模板
 
-`BaseJobHandler` 提供了通用任务执行模板。自定义任务只需继承 `BaseJobHandler` 并实现 `doExecute(String param)` 方法。
-
-**示例**：
-
-```java
-import com.zh.template.BaseJobHandler;
-import com.xxl.job.core.biz.model.ReturnT;
-import org.springframework.stereotype.Component;
-
-@Component("myJobHandler")
-public class MyJobHandler extends BaseJobHandler {
-
-    public MyJobHandler() {
-        super(false, 3); // 同步执行，重试 3 次
-    }
-
-    @Override
-    protected ReturnT<String> doExecute(String param) throws Exception {
-        // 执行任务逻辑
-        return ReturnT.SUCCESS;
-    }
-}
-```
 
 ## 高级功能
 
 - **延迟任务**：使用 `@XxlJobTask(delay = 5000)` 实现任务的延迟执行。
-- **任务分组**：可以在注解上配置 `jobGroup` 来指定任务的分组。
 - **条件触发**：基于 Spring 条件注解，可以使用 `@ConditionalOnExpression` 等条件来控制任务执行条件。
 
-## 测试
 
-在测试项目中模拟配置：
-
-1. **创建测试类**：
-
-    ```java
-    @SpringBootTest
-    public class XxlJobTest {
-
-        @Autowired
-        private XxlJobService xxlJobService;
-
-        @Test
-        public void testAddJob() {
-            Map<String, Object> jobConfig = new HashMap<>();
-            jobConfig.put("jobGroup", 1);
-            jobConfig.put("jobDesc", "测试任务");
-            jobConfig.put("executorHandler", "testHandler");
-            jobConfig.put("scheduleType", "CRON");
-            jobConfig.put("scheduleConf", "0 0/1 * * * ?");
-            boolean result = xxlJobService.addJob(jobConfig);
-            Assertions.assertTrue(result);
-        }
-    }
-    ```
-
-2. **运行测试**：
-
-   运行测试，验证任务是否正确添加和执行。
-
----
 
 这样，通过简单的配置和注解即可将 XXL-JOB 集成到您的项目中，支持任务的自动注册、参数验证、分布式锁和任务执行模板等功能。

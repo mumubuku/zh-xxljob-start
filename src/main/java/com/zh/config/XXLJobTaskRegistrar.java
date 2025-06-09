@@ -10,7 +10,9 @@ import org.redisson.api.RedissonClient;
 import org.reflections.Reflections;
 import org.reflections.scanners.MethodAnnotationsScanner;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationListener;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.stereotype.Component;
 
@@ -20,7 +22,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Component
-public class XXLJobTaskRegistrar {
+public class XXLJobTaskRegistrar  implements ApplicationListener<ApplicationReadyEvent> {
 
     private static final String JOB_REGISTRATION_LOCK = "xxl-job-registration-lock";
 
@@ -37,7 +39,12 @@ public class XXLJobTaskRegistrar {
     @Autowired
     private XxlJobProperties xxlJobProperties;
 
-    @PostConstruct
+
+    @Override
+    public void onApplicationEvent(ApplicationReadyEvent event) {
+        // 此时 Nacos 配置已加载
+        registerJobs();
+    }
     public void registerJobs() {
         // 获取主启动类，检查其是否带有 @EnableXxlJob 注解
         Object mainAppBean = applicationContext.getBeansWithAnnotation(EnableXxlJob.class).values().stream().findFirst().orElse(null);

@@ -13,6 +13,7 @@ import com.zh.service.JobService;
 import com.zh.service.impl.JobServiceImpl;
 import jodd.util.StringUtil;
 import org.redisson.api.RedissonClient;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -20,9 +21,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.Assert;
 
-@Configuration
+
+@AutoConfiguration
 @EnableConfigurationProperties(XxlJobProperties.class)  // 启用 XxlJobProperties 的自动装配
-@ConditionalOnClass(JobService.class)  // 当项目中有 XxlJobService 时才生效
 public class XxlJobAutoConfiguration {
 
     /**
@@ -53,7 +54,7 @@ public class XxlJobAutoConfiguration {
         xxlJobExecutor.setAdminAddresses(xxlJobProperties.getAdminAddresses());
         xxlJobExecutor.setAppname(xxlJobProperties.getAppname());
         xxlJobExecutor.setIp(xxlJobProperties.getIp());
-        xxlJobExecutor.setPort(xxlJobProperties.getPort());
+
         xxlJobExecutor.setAccessToken(xxlJobProperties.getAccessToken());
        // xxlJobExecutor.setLogPath(xxlJobProperties.getLogPath());
        // xxlJobExecutor.setLogRetentionDays(xxlJobProperties.getLogRetentionDays());
